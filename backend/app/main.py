@@ -15,6 +15,14 @@ from app.core.config import get_cors_origins, get_settings
 from app.database.base import Base
 from app.database.session import engine
 import app.models  # noqa: F401 - imports models for metadata registration.
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://pulse-self-psi.vercel.app"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @asynccontextmanager
