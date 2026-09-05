@@ -1,0 +1,3 @@
+import { NavLink, useNavigate } from "react-router-dom";
+import { logout } from "../api/client";
+export default function NavBar() { const navigate = useNavigate(); const cls = ({ isActive }) => `text-sm pb-1 border-b-2 ${isActive ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink"}`; return <header className="flex items-center justify-between py-4 border-b border-line"><div className="flex items-center gap-8"><span className="font-semibold text-lg">Pulse</span><nav className="flex gap-6"><NavLink to="/" end className={cls}>Home</NavLink><NavLink to="/watchlist" className={cls}>Watchlist</NavLink></nav></div><button className="text-sm text-muted hover:text-ink" onClick={() => { logout(); navigate("/login"); }}>Sign out</button></header>; }
