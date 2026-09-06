@@ -1,1 +1,0 @@
-"""Pulse backend application package."""
