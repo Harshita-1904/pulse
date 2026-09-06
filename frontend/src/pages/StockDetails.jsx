@@ -83,7 +83,7 @@ export default function StockDetails() {
                 <h2 className="font-medium text-ink">Price chart</h2>
                 <span className="text-xs text-muted">Provider-backed observations</span>
               </div>
-              <PriceChart points={history} />
+              <PriceChart points={history} symbol={quote.symbol} />
             </div>
 
             <div className="mt-5 flex items-center justify-between gap-4">

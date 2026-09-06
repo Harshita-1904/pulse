@@ -7,6 +7,7 @@ from app.api.deps import CurrentUser, DatabaseSession
 from app.schemas.overview import (
     BatchRefreshItem,
     BatchRefreshResponse,
+    MissedAlertResponse,
     WatchlistOverviewResponse,
 )
 from app.services.change_engine import ChangeIntelligenceError, mark_seen
@@ -29,6 +30,25 @@ def get_watchlist_overview(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
 
     changed = [summary for summary in summaries if summary.direction in {"up", "down"}]
+    missed_alerts = [
+        MissedAlertResponse(
+            symbol=summary.symbol,
+            change_pct=summary.price_change_percent,
+            change_score=summary.change_score,
+            severity=summary.severity,
+            direction=summary.direction,
+            message=summary.verdict,
+            reasons=summary.reasons,
+        )
+        for summary in summaries
+        if (
+            summary.has_new_data
+            and summary.change_score is not None
+            and summary.change_score >= 0.60
+            and summary.severity == "significant"
+            and summary.direction in {"up", "down"}
+        )
+    ]
     response = WatchlistOverviewResponse(
         watchlist_id=watchlist.id,
         watchlist_name=watchlist.name,
@@ -37,6 +57,7 @@ def get_watchlist_overview(
         up_count=sum(summary.direction == "up" for summary in summaries),
         down_count=sum(summary.direction == "down" for summary in summaries),
         unseen_count=sum(summary.direction == "first_view" for summary in summaries),
+        missed_alerts=missed_alerts,
         items=[to_response(summary) for summary in summaries],
     )
     # Preserve the calculated snapshot in the response, then make its prices the

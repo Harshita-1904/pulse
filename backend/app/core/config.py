@@ -18,11 +18,14 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
-    market_data_provider: str = "alpha_vantage"
+    market_data_provider: str = "twelve_data"
     market_data_api_key: str = ""
     market_data_base_url: str = "https://www.alphavantage.co/query"
     market_data_timeout_seconds: float = 10.0
     market_data_max_age_seconds: int = 300
+    twelve_data_api_key: str = ""
+    twelve_data_base_url: str = "https://api.twelvedata.com"
+    twelve_data_timeout_seconds: float = 10.0
     groq_api_key: str = ""
     groq_base_url: str = "https://api.groq.com/openai/v1"
     groq_model: str = "openai/gpt-oss-20b"

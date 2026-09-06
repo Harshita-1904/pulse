@@ -17,8 +17,6 @@ from app.database.session import engine
 import app.models  # noqa: F401 - imports models for metadata registration.
 
 
-
-
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Optionally create local development tables before serving requests."""
