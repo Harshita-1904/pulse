@@ -64,9 +64,11 @@ def _parse_timestamp(value: object) -> datetime | None:
 
 def get_quote(symbol: str, exchange: str | None = None) -> TwelveQuote:
     params = {
-        "symbol": symbol.strip().upper(),
-        "exchange": (exchange or "NSE").strip().upper(),
-    }
+    "symbol": symbol.strip().upper(),
+    "interval": interval,
+    "outputsize": max(1, min(outputsize, 5000)),
+    "exchange": (exchange or "NSE").strip().upper(),
+}
     payload = _request("quote", params)
     try:
         price = float(payload["close"])
@@ -91,12 +93,11 @@ def get_historical_prices(
     outputsize: int = 100,
 ) -> list[TwelveHistoricalPoint]:
     params = {
-        "symbol": symbol.strip().upper(),
-        "interval": interval,
-        "outputsize": max(1, min(outputsize, 5000)),
-    }
-    
-    params["exchange"] = exchange.strip().upper()
+    "symbol": symbol.strip().upper(),
+    "interval": interval,
+    "outputsize": max(1, min(outputsize, 5000)),
+    "exchange": (exchange or "NSE").strip().upper(),
+}
 
     payload = _request("time_series", params)
     values = payload.get("values") if isinstance(payload, dict) else None

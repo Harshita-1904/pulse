@@ -227,9 +227,7 @@ def get_or_refresh_quote(database: Session, symbol: str, *, force_refresh: bool 
 
     provider_quote = _fetch_with_fallback(normalized_symbol, stock)
     if stock is None:
-        stock = Stock(symbol=normalized_symbol)
-        database.add(stock)
-        database.flush()
+     stock = Stock(symbol=normalized_symbol, exchange="NSE")
 
     observation = MarketData(
         stock_id=stock.id,
