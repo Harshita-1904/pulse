@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getHistory, getQuote, markSeen } from "../api/client";
 import PriceChart from "../components/PriceChart";
@@ -33,6 +33,31 @@ export default function StockDetails() {
   useEffect(() => {
     load(true);
   }, [load]);
+
+  // Bridge the backend's { price, recorded_at } shape into what
+  // PriceChart.jsx expects: { timestamp, price }. Accepts either
+  // `timestamp` or `recorded_at` so it won't break if the backend
+  // response shape changes later.
+  const chartData = useMemo(() => {
+    return history
+      .map((point) => ({
+        timestamp: point.timestamp ?? point.recorded_at,
+        price: Number(point.price),
+        volume:
+          point.volume === null || point.volume === undefined
+            ? null
+            : Number(point.volume),
+      }))
+      .filter((point) => point.timestamp && Number.isFinite(point.price))
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  }, [history]);
+
+  const chartChange = useMemo(() => {
+    if (chartData.length < 2) return null;
+    const first = chartData[0].price;
+    const last = chartData[chartData.length - 1].price;
+    return ((last - first) / first) * 100;
+  }, [chartData]);
 
   async function seen() {
     setBusy(true);
@@ -83,7 +108,7 @@ export default function StockDetails() {
                 <h2 className="font-medium text-ink">Price chart</h2>
                 <span className="text-xs text-muted">Provider-backed observations</span>
               </div>
-              <PriceChart points={history} symbol={quote.symbol} />
+              <PriceChart data={chartData} symbol={quote.symbol} changePct={chartChange} />
             </div>
 
             <div className="mt-5 flex items-center justify-between gap-4">
