@@ -101,18 +101,21 @@ def calculate_change(database: Session, user_id: str, symbol: str) -> ChangeSumm
     volume_percent = percentage_change(latest.volume, state.last_seen_volume)
     direction: Literal["up", "down", "unchanged", "first_view"] = "up" if price_delta > 0 else "down" if price_delta < 0 else "unchanged"
     history = list(database.scalars(select(PriceHistory).where(PriceHistory.stock_id == stock.id).order_by(PriceHistory.recorded_at.asc()).limit(100)))
-    returns = [percentage_change(history[i].price, history[i - 1].price) or 0.0 for i in range(1, len(history))]
+    all_returns = [percentage_change(history[i].price, history[i - 1].price) or 0.0 for i in range(1, len(history))]
+    # Score the latest move against PRIOR behavior only — never include the
+    # transition being evaluated in its own baseline distribution.
+    baseline_returns = all_returns[:-1]
     prior_prices = [point.price for point in history[:-1]]
     daily_change = percentage_change(latest.price, prior_prices[-1]) if prior_prices else None
-    historical_ready = len(history) >= 5 and len(returns) >= 4
-    if historical_ready and price_percent is not None and standard_deviation(returns) > 0:
-        price_signal, method = min(abs((price_percent - mean(returns)) / standard_deviation(returns)) / 3, 1), "historical_z_score"
+    historical_ready = len(history) >= 6 and len(baseline_returns) >= 4
+    if historical_ready and price_percent is not None and standard_deviation(baseline_returns) > 0:
+        price_signal, method = min(abs((price_percent - mean(baseline_returns)) / standard_deviation(baseline_returns)) / 3, 1), "historical_z_score"
     else:
         price_signal, method = min(abs(price_percent or 0) / 5, 1), "cold_start_fixed_threshold"
     volumes = [point.volume for point in history[:-1] if point.volume is not None and point.volume > 0]
     volume_ratio = latest.volume / mean(volumes) if latest.volume is not None and volumes else None
     volume_signal = min(max((volume_ratio - 1) / 2, 0), 1) if volume_ratio is not None else None
-    normal_volatility = standard_deviation(returns)
+    normal_volatility = standard_deviation(baseline_returns)
     volatility_signal = min(max((abs(daily_change) / normal_volatility - 1) / 2, 0), 1) if historical_ready and normal_volatility > 0 and daily_change is not None else None
     signals = [(0.5, price_signal)] + ([(0.3, volume_signal)] if volume_signal is not None else []) + ([(0.2, volatility_signal)] if volatility_signal is not None else [])
     score = sum(weight * signal for weight, signal in signals) / sum(weight for weight, _ in signals)

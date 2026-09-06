@@ -63,10 +63,10 @@ def _parse_timestamp(value: object) -> datetime | None:
 
 
 def get_quote(symbol: str, exchange: str | None = None) -> TwelveQuote:
-    params = {"symbol": symbol.strip().upper()}
-    if exchange:
-        params["exchange"] = exchange.strip().upper()
-
+    params = {
+        "symbol": symbol.strip().upper(),
+        "exchange": (exchange or "NSE").strip().upper(),
+    }
     payload = _request("quote", params)
     try:
         price = float(payload["close"])
@@ -95,8 +95,8 @@ def get_historical_prices(
         "interval": interval,
         "outputsize": max(1, min(outputsize, 5000)),
     }
-    if exchange:
-        params["exchange"] = exchange.strip().upper()
+    
+    params["exchange"] = exchange.strip().upper()
 
     payload = _request("time_series", params)
     values = payload.get("values") if isinstance(payload, dict) else None
