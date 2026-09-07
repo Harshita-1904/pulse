@@ -31,7 +31,7 @@ export default function StockDetails() {
   }, [symbol]);
 
   useEffect(() => {
-    load(false);
+    load(true);
   }, [load]);
 
   // Bridge the backend's { price, recorded_at } shape into what
